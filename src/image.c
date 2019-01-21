@@ -272,10 +272,12 @@ void draw_cells(image im, int wc, int hc)
 
 void draw_obj_map(image im, float **obj_map, int wc, int hc)
 {
-    assert(im.c == 4); // only support rgba image
+    //assert(im.c == 4); // only support rgba image
     float alpha = 0.6;
+    int _h=2*im.h, _w=2*im.w;
     float cell_w = im.w / (wc + 0.0), cell_h = im.h / (hc + 0.0);
     int i, j, x, y, offset, index;
+
 
     // alpha blending: Ires = alpha x Ifg + (1 - alpha) x Ibg
     // TODO: add cells cache to decrease computation
@@ -293,7 +295,7 @@ void draw_obj_map(image im, float **obj_map, int wc, int hc)
             im.data[offset + 1*im.w*im.h] += alpha * obj_map[index][1];
             im.data[offset + 2*im.w*im.h] *= 1 - alpha;
             im.data[offset + 2*im.w*im.h] += alpha * obj_map[index][2];
-            im.data[offset + 3*im.w*im.h] = 1;
+            //im.data[offset + 3*im.w*im.h] = 1;
             /* printf("pos: [%d %d], r: %f, g: %f, b: %f\n", x, y, im.data[]) */
         }
     }

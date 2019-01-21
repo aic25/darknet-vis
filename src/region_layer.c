@@ -476,17 +476,31 @@ void get_region_boxes(layer l, int w, int h, int netw, int neth, float thresh, f
     correct_region_boxes(boxes, l.w*l.h*l.n, w, h, netw, neth, relative);
 }
 
+double _max(const float *arr, size_t length) {
+    // returns the minimum value of array
+    size_t i;
+    double maximum = arr[0];
+    for (i = 1; i < length; ++i) {
+        if (maximum < arr[i]) {
+            maximum = arr[i];
+        }
+    }
+    return maximum;
+}
+
 void get_obj_map(float **probs, float **obj_map, int map_size, int n, int classes)
 {
     // @n: the number of region proposal per cell
     // @classes: the number of classes, it marks the position of obj prob
     int i, j;
+    float max_class_prob;
     for(i = 0; i < map_size; ++i){
         // here, we select the max obj probability among n region proposals
         float max_prob = 0.0;
         for(j = 0; j < n; ++j){
             int index = j * map_size + i;
-            if(probs[index][classes] > max_prob) max_prob = probs[index][classes];
+            max_class_prob = _max(probs[index], classes);
+            if(max_class_prob > max_prob) max_prob = max_class_prob; //probs[index][classes];
         }
 
         // convert prob to color

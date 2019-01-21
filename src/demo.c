@@ -50,15 +50,18 @@ double get_wall_time()
     }
     return (double)time.tv_sec + (double)time.tv_usec * .000001;
 }
-
+int j;
 void *detect_in_thread(void *ptr)
 {
     running = 1;
     float nms = .4;
 
     layer l = net.layers[net.n-1];
+    float **obj_map = calloc(l.w*l.h, sizeof(float *));
+    for(j = 0; j < l.w*l.h; ++j) obj_map[j] = calloc(3, sizeof(float *));
+            
     float *X = buff_letter[(buff_index+2)%3].data;
-    float *prediction = network_predict(net, X);
+    float *prediction = network_predict(net, X);    
 
     memcpy(predictions[demo_index], prediction, l.outputs*sizeof(float));
     mean_arrays(predictions, demo_frame, l.outputs, avg);
@@ -67,6 +70,13 @@ void *detect_in_thread(void *ptr)
         get_detection_boxes(l, 1, 1, demo_thresh, probs, boxes, 0);
     } else if (l.type == REGION){
         get_region_boxes(l, buff[0].w, buff[0].h, net.w, net.h, demo_thresh, probs, boxes, 0, 0, 0, demo_hier, 1);
+        if(net.visualization){
+            get_obj_map(probs, obj_map, l.w*l.h, l.n, l.classes);
+            draw_obj_map(buff[(buff_index+2) % 3], obj_map, l.w, l.h);
+            //draw_obj_map(buff[0], obj_map, l.w, l.h);
+            //draw_obj_map(buff[1], obj_map, l.w, l.h);
+            //draw_obj_map(buff[2], obj_map, l.w, l.h);            
+        }
     } else {
         error("Last layer must produce detections\n");
     }
@@ -78,6 +88,8 @@ void *detect_in_thread(void *ptr)
     printf("Objects:\n\n");
     image display = buff[(buff_index+2) % 3];
     draw_detections(display, demo_detections, demo_thresh, boxes, probs, 0, demo_names, demo_alphabet, demo_classes, 0);
+
+    free_ptrs((void **)obj_map, l.w*l.h);
 
     demo_index = (demo_index + 1)%demo_frame;
     running = 0;
